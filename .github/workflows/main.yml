@@ -1,0 +1,19 @@
+name: publish
+on: [push]
+jobs:
+  publish-docker-images:
+    runs-on: ubuntu-latest
+    steps:
+    - uses: actions/checkout@v2
+    - name: Login to GitHub Container Registry
+      uses: docker/login-action@v1
+      with:
+        registry: ghcr.io
+        username: ${{ github.actor }}
+        password: ${{ secrets.NEW_GITHUB_TOKEN }}
+    - name: Build the prediction model Docker image
+      run: |
+        docker build ./model/ --tag ghcr.io/nuwancw/prediction_model:latest
+        docker run ghcr.io/nuwancw/prediction_model:latest
+        docker push ghcr.io/nuwancw/prediction_model:latest
+        
