@@ -1,5 +1,8 @@
 name: publish
-on: push
+on: 
+  push:
+  workflow_dispatch:
+    
 jobs:
   publish-docker-images:
     runs-on: ubuntu-latest
