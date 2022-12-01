@@ -14,6 +14,5 @@ jobs:
     - name: Build the prediction model Docker image
       run: |
         docker build ./model/ --tag ghcr.io/nuwancw/prediction_model:latest
-        docker run ghcr.io/nuwancw/prediction_model:latest
         docker push ghcr.io/nuwancw/prediction_model:latest
         
