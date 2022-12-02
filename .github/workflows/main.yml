@@ -1,7 +1,6 @@
 name: publish
 on: 
-  push:
-  repository_dispatch:
+  [push,repository_dispatch]
     
 jobs:
   publish-docker-images:
@@ -18,4 +17,5 @@ jobs:
       run: |
         docker build ./model/ --tag ghcr.io/nuwancw/prediction_model:latest
         docker push ghcr.io/nuwancw/prediction_model:latest
+        
         
