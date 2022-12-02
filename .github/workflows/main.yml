@@ -1,21 +1,47 @@
-name: publish
+name: Build and push to GKE
 on: 
   [push,repository_dispatch]
-    
+
+env:
+  PROJECT_ID: ${{secrets.GKE_PROJECT}}
+  GKE_CLUSTER: test-gke2
+  GKE_ZONE: us-west1-b 
+  DEPLOYMENT_NAME: test-gke2
+  IMAGE: prediction_model
+  TAG: 1.0.0
+
 jobs:
-  publish-docker-images:
+  setup-build-publih-deploy:
+    name: Setup Build Publish Deploy
     runs-on: ubuntu-latest
+
     steps:
-    - uses: actions/checkout@v2
-    - name: Login to GitHub Container Registry
-      uses: docker/login-action@v1
-      with:
-        registry: ghcr.io
-        username: ${{ github.actor }}
-        password: ${{ secrets.NEW_GITHUB_TOKEN }}
-    - name: Build the prediction model Docker image
-      run: |
-        docker build ./model/ --tag ghcr.io/nuwancw/prediction_model:latest
-        docker push ghcr.io/nuwancw/prediction_model:latest
-        
+      - name: Checkout repository
+        uses: actions/checkout@v2
+      
+      - name: Set up Google Cloud CLI 
+        uses: GoogleCloudPlatform/github-actions/setup-gcloud@0.1.3
+        env:
+          ACTION_ALLOW_UNSECURE_COMMANDS: true
+        with:
+          service-account_key: ${{secrets.GKE_SA_KEY}}
+          project_id: ${{secrets.GKE_PROJECT}}
+
+      - name: Configure Docker
+        run: |-
+          gcloud --quite auth configure-docker
+      
+      - name: get GKE Credentials
+        run: |-
+          gcloud container clusters get-credentials "$GKE_CLUSTER" --zone "$GKE_ZONE"
+
+      - name: Build Docker Image
+        run:  |-
+          docker build ./model/ --tag "gcr.io/$PROJECT_ID/$IMAGE:$TAG"
+
+      - name: Publish Docker Image to GCR 
+        run: |-
+          docker push "gcr.io/$PROJECT_ID/$IMAGE:$TAG"
+
+
         
