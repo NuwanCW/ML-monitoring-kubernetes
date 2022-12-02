@@ -24,7 +24,7 @@ jobs:
         env:
           ACTIONS_ALLOW_UNSECURE_COMMANDS: true
         with:
-          service-account_key: ${{secrets.GKE_SA_KEY}}
+          service_account_key: ${{secrets.GKE_SA_KEY}}
           project_id: ${{secrets.GKE_PROJECT}}
 
       - name: Configure Docker
