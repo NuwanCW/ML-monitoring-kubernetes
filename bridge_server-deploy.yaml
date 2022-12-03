@@ -23,9 +23,6 @@ spec:
         - name: bridge-sever
           image: gcr.io/PROJECT_ID/bridge_server:0.0.1
           imagePullPolicy: Always
-          env:
-            - name: Bearer
-            - value: 
           ports:
             - name: app
               containerPort: 8002
