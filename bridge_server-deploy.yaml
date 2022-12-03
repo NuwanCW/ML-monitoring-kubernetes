@@ -1,0 +1,54 @@
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: bridge-sever
+  labels:
+    name: bridge-sever
+    app: bridge-sever
+spec:
+  replicas: 1
+  selector:
+    matchLabels:
+      name: bridge-sever
+      app: bridge-sever
+
+  template:
+    metadata:
+      name: bridge-sever
+      labels:
+        name: bridge-sever
+        app: bridge-sever
+    spec:
+      containers:
+        - name: bridge-sever
+          image: gcr.io/PROJECT_ID/bridge_server:0.0.1
+          imagePullPolicy: Always
+          env:
+            - name: Bearer
+            - value: 
+          ports:
+            - name: app
+              containerPort: 8002
+              protocol: TCP
+          resources:
+            requests:
+              memory: 100Mi
+              cpu: 100m
+            limits:
+              memory: 200Mi
+              cpu: 200m
+
+---
+apiVersion: v1
+kind: Service
+metadata:
+  name: bridge-sever-service
+  labels:
+    app: bridge-sever
+spec:
+  selector:
+    app: bridge-sever
+  ports:
+    - name: app
+      port: 8002
+  type: ClusterIP

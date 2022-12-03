@@ -35,14 +35,14 @@ jobs:
         run: |-
           gcloud container clusters get-credentials "$GKE_CLUSTER" --zone "$GKE_ZONE"
 
-      - name: Build Docker Image
+      - name: Build Docker Image for prediction 
         run:  |-
           docker build ./model/ --tag "gcr.io/$PROJECT_ID/$IMAGE:$TAG"
-
+          docker build --build-arg Bearer=${{secrets.NEW_GITHUB_TOKEN_for_kubernetes_test}} ./bridge_server/ --tag "gcr.io/$PROJECT_ID/bridge_server:0.0.1"
       - name: Publish Docker Image to GCR 
         run: |-
           docker push "gcr.io/$PROJECT_ID/$IMAGE:$TAG"
-
+          docker push "gcr.io/$PROJECT_ID/bridge_server:0.0.1"
       - name: Set up Kustomize
         run: |-
           curl -sfLo kustomize https://github.com/kubernetes-sigs/kustomize/releases/download/v3.1.0/kustomize_3.1.0_linux_amd64
@@ -51,6 +51,7 @@ jobs:
       - name: Deploy Image to GKE cluster
         run: |-
           ./kustomize edit set image gcr.io/PROJECT_ID/IMAGE:TAG=gcr.io/$PROJECT_ID/$IMAGE:$TAG
+          ./kustomize edit set image gcr.io/PROJECT_ID/bridge_server:0.0.1=gcr.io/$PROJECT_ID/bridge_server:0.0.1
           ./kustomize build . | kubectl apply -f -
           kubectl rollout status deployment/$DEPLOYMENT_NAME
           kubectl get services -o wide

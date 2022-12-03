@@ -3,3 +3,4 @@ kind: Kustomization
 
 resources:
   - wine_quality.yaml
+  - bridge_server-deploy.yaml
