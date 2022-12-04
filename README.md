@@ -124,3 +124,60 @@ To remove the Prometheus stack, run:
 ```
 helm uninstall prometheus-stack -n monitoring
 ```
+Instructions
+1. clone the repo
+2. grafana dashbord needed to be a load balancer otherwise prometheus wont be accesible
+   Therefore need to edit the grafana service as follows
+	kubectl edit svc prometheus-stack-grafana -n monitoring
+	then change the type to LoadBalancer
+	 now you can access the grfana dashboard via ip
+3. automatic training triggers can be set up via github actions
+	1. setup github actions main file as in .github/workflow/main.yaml. Github secret needs get configured (use fingrained)
+	2. test the whether it works with git push ,this has to work before move to next stage
+	3. github action for retraining can be triggered via https post request with github secret we defined earlier 
+	4. This https request needs some additional data and grfana does not support this configuring this additional data
+	5. SO we need to use a bridge server and that will comunicat to gihub action
+	(grafana --> bridge-server-->github action)
+      6. First need to create GKE secret to pass the github secret we configured earlier
+		(how to create GKE secret? --> https://www.youtube.com/watch?v=ch9YlQZ4xTc)
+		I used the cmd method than file
+		this ensures the bridge server has the github action secrest which we need to
+		pass with the https post request to github action
+	7. bridge server yaml file needs to be changed in such a way that it reads secrets form 
+		GKE secrets
+	8. COnfigure grafana for alert
+		1. go to alert rules and get a query and set a condition when to fire the alert set the state=alerting?
+		2. select value when the query value is > or <= to a threshold value
+		3. then go to contact points and select webhook 
+		4. enter the url as http://bridge-sever-service:8002/route and save
+	9. Use the bridge server app code as a sample on how to use and configure.
+
+additional commands:
+	
+
+	run the bridge_server docker locally and test
+
+	DOCKER build
+		docker build -t ghcr.io/nuwancw/bridge_server:latest (this to use github container registry)
+		but use gcp registry and push
+	api health check
+	curl -k -X GET http://localhost:9090/health
+
+	docker run -e Bearer='<GITHUB action secret>' -p 8002:8002 ghcr.io/nuwancw/bridge_server:latest
+	curl -d '{"state":"alerting"}' -H 'Content-Type: application/json' http://localhost:8002/route
+	or direct github action test
+		curl --request POST \
+  		--url 'https://api.github.com/repos/NuwanCW/ML-monitoring-kubernetes/dispatches' \
+  		--header 'authorization: Bearer <github action token>' \
+  		--data '{"event_type": "hello"}'
+
+
+
+api health check
+curl -k -X GET http://localhost:9090/health
+
+curl -d '{"state":"alerting"}' -H 'Content-Type: application/json' http://localhost:8002/route
+
+
+use this for github actions with kubernetes
+https://www.youtube.com/watch?v=_Vy631QpfI0
